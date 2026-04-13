@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>山字营演武模拟器</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #1a1a1a;
+            color: #eee;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: #2d2d2d;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .panel {
+            background: #333;
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #d4af37;
+            text-align: left;
+        }
+
+        button {
+            background: #b8860b;
+            color: white;
+            border: none;
+            padding: 10px;
+            margin: 5px;
+            cursor: pointer;
+            width: 90%;
+        }
+
+        input {
+            padding: 8px;
+            width: 80%;
+            margin: 10px 0;
+            border-radius: 4px;
+            border: none;
+            color: black;
+        }
+
+        .item-tag {
+            display: inline-block;
+            background: #555;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin: 2px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>山字营演武模拟器</h1>
+        <div id="roster" class="panel">初始化中...</div>
+        <div id="status">正在准备数据...</div>
+        <div id="btn-area"></div>
+        <div id="input-area"></div>
+    </div>
+
+    <datalist id="charList"></datalist>
+    <datalist id="skillList"></datalist>
+
+    <script>
+        const characters = ["于禁", "荀彧", "司马懿", "张郃", "曹丕", "邓艾", "曹操", "许褚", "典韦", "荀攸", "贾诩", "郭嘉", "王异", "夏侯惇", "曹仁", "甄姬", "卞夫人", "刘备", "徐晃", "乐进", "曹纯", "夏侯渊", "张春华", "程昱", "黄月英", "关银屏", "赵云", "马云禄", "马超", "魏延", "关羽", "张飞", "诸葛亮", "庞统", "徐庶", "黄忠", "法正", "甘夫人", "姜维", "SP诸葛亮", "孙权", "孙策", "孙尚香", "小乔", "大乔", "鲁肃", "甘宁", "周瑜", "陆逊", "程普", "吕蒙", "太史慈", "黄盖", "孙坚", "周泰", "凌统", "陆抗", "张昭", "吕布", "张辽", "李儒", "张角", "左慈", "陈宫", "华雄", "马腾", "蔡文姬", "袁绍", "孟获", "祝融夫人", "朱儁", "于吉", "田丰", "颜良", "文丑", "华佗", "公孙瓒", "貂蝉", "张宁", "庞德", "袁术", "董卓", "邹氏", "皇甫嵩", "诸葛瑾", "徐盛", "张梁", "张宝", "高顺", "群孙坚", "木鹿大王", "关平", "周仓", "步练师"];
+        const skills = ["洞若观火", "破阵驰围", "运筹帷幄", "铁骑横冲", "横扫千军", "舍生取义", "清风驱疾", "文武双全", "万夫莫当", "伏兵四起", "断敌粮道", "料事如神", "指点乾坤", "水淹七军", "出其不意", "奇门遁甲", "坚如磐石", "五雷轰顶", "任人择势", "无难之志", "斩将夺旗", "势如破竹", "上智为间", "锐不可当", "狂风大作", "战八方", "趁火打劫", "披坚执锐", "以静制动", "攻其不备", "烈火焚营", "风卷残云", "威名显赫", "忘私相助", "青囊急救", "巧利天灾", "兵贵神速", "空城计", "横征暴敛", "勇冠三军", "百战不殆", "王佐之才", "计袭粮仓", "千里突袭", "辕门射戟", "轻装驰援", "破军袭敌", "秉虚而入", "蓄势待发", "神略制变", "摧坚克难", "知人善任", "三军夺气", "乘间投隙", "韬光养晦", "奇正相生", "固若金汤", "胜敌益强", "缮甲厉兵", "同舟共济", "金城汤池", "明其虚实", "烈火张天", "冲锐巧变", "折冲御侮", "洗筋伐髓", "经天纬地", "文韬武略", "挫锐折锋", "运智铺谋", "十面埋伏", "步步为营", "智破千军", "谋而后动", "黄天惑心", "潜龙在渊", "断戈夺锋", "御敌临前", "惩前毖后", "虎步连环", "万军辟易", "蹈锋饮血", "践墨随敌", "机变无穷", "掠阵破军", "及锋而试", "恩威并行", "调和阴阳", "风助火势", "瞋目横矛", "未雨绸缪"];
+
+        // 初始化补全列表
+        characters.forEach(c => document.getElementById('charList').innerHTML += `<option value="${c}">`);
+        skills.forEach(s => document.getElementById('skillList').innerHTML += `<option value="${s}">`);
+
+        let charPool = [...characters].sort(() => Math.random() - 0.5);
+        let skillPool = [...skills].sort(() => Math.random() - 0.5);
+        let history = { "公共核心": [], "初始武将": [], "所选武将": [], "所选战法": [], "自选补强": [] };
+        let steps = [1, 2, 2, 1, 2, 2];
+        let currentStep = -1;
+        let customStage = 0; // 0:自选武将, 1,2:自选战法
+
+        function updatePanel() {
+            let html = "";
+            for (let key in history) {
+                if (history[key].length > 0) html += `<div><strong>${key}:</strong> ${history[key].map(i => `<span class="item-tag">${i}</span>`).join("")}</div>`;
+            }
+            document.getElementById('roster').innerHTML = html;
+        }
+
+        function init() {
+            if (charPool.length > 0) history["公共核心"].push(charPool.pop());
+            for (let i = 0; i < 3 && charPool.length > 0; i++) history["初始武将"].push(charPool.pop());
+            updatePanel();
+            next();
+        }
+
+        function next() {
+            currentStep++;
+            if (currentStep >= steps.length) return startCustomSelection();
+            showSelection(steps[currentStep]);
+        }
+
+        function showSelection(type) {
+            let pool = (type === 1) ? charPool : skillPool;
+            let key = (type === 1) ? "所选武将" : "所选战法";
+            document.getElementById('status').innerText = "步骤 " + (currentStep + 1) + "/6: 请选择一组" + (type === 1 ? "武将" : "战法");
+            let area = document.getElementById('btn-area');
+            area.innerHTML = "";
+            for (let i = 0; i < 3; i++) {
+                if (pool.length < 3) break;
+                let group = [pool.pop(), pool.pop(), pool.pop()];
+                let btn = document.createElement('button');
+                btn.innerText = "选项 " + (i + 1) + ": " + group.join("、");
+                btn.onclick = () => { history[key].push(...group); updatePanel(); next(); };
+                area.appendChild(btn);
+            }
+        }
+
+        function startCustomSelection() {
+            document.getElementById('btn-area').innerHTML = "";
+            showInput();
+        }
+
+        function showInput() {
+            let isChar = customStage === 0;
+            document.getElementById('status').innerText = isChar ? "【自选阶段】请输入一个武将：" : "【自选阶段】请输入两个战法 (第" + customStage + "/2个)：";
+            document.getElementById('input-area').innerHTML = `
+                <input id="userInput" list="${isChar ? 'charList' : 'skillList'}" placeholder="在此输入名称...">
+                <button onclick="confirmCustom()">确认添加</button>`;
+        }
+
+        function confirmCustom() {
+            let val = document.getElementById('userInput').value;
+            if (!val) return;
+            history["自选补强"].push(val);
+            updatePanel();
+            customStage++;
+            if (customStage < 3) showInput();
+            else {
+                document.getElementById('status').innerText = "演武完成！";
+                document.getElementById('input-area').innerHTML = "<button onclick='location.reload()'>重来一局</button>";
+            }
+        }
+
+        window.onload = init;
+    </script>
+</body>
+
+</html>
