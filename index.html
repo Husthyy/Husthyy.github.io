@@ -101,7 +101,10 @@
 
         function init() {
             history["公共核心"].push(publicPool.pop());
-            for (let i = 0; i < 3; i++) history["初始武将"].push(charPool.pop());
+            for (let i = 0; i < 3; i++) {
+                let char = charPool.pop();
+                history["初始武将"].push(char);
+            }
             updatePanel();
             next();
         }
@@ -119,7 +122,13 @@
             let area = document.getElementById('btn-area');
             area.innerHTML = "";
             for (let i = 0; i < 3; i++) {
-                let group = [pool.pop(), pool.pop(), pool.pop()];
+                let group = [];
+                // 确保每次抽取的个体不重复
+                while (group.length < 3) {
+                    let item = pool.pop();
+                    let allSelected = [].concat(...Object.values(history));
+                    if (!allSelected.includes(item)) group.push(item);
+                }
                 let btn = document.createElement('button');
                 btn.innerText = "选项 " + (i + 1) + ": " + group.join("、");
                 btn.onclick = () => { history[key].push(...group); updatePanel(); next(); };
@@ -143,13 +152,10 @@
         function confirmCustom() {
             let val = document.getElementById('userInput').value;
             let isChar = customStage === 0;
-
-            // 校验1：是否存在于列表中
             let isValid = isChar ? characters.includes(val) : skills.includes(val);
-            if (!isValid) { alert("未找到该名称！请检查输入是否正确。"); return; }
-
-            // 校验2：是否与已选内容重复 (检查history中所有已添加的项目)
             let allSelected = [].concat(...Object.values(history));
+
+            if (!isValid) { alert("未找到该名称！请检查输入是否正确。"); return; }
             if (allSelected.includes(val)) { alert("该项已选过，请选择其他内容！"); return; }
 
             history["自选补强"].push(val);
